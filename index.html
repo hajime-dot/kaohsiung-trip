@@ -1,0 +1,172 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOGOGO高雄</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: auto;
+    }
+    .rectangle-frame {
+      position: relative;
+      width: 90vw;
+      max-width: 600px;
+      height: auto;
+      min-height: 250px;
+      background: #1a1a1a;
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      padding: 10px;
+    }
+    .container {
+      text-align: center;
+      padding: 15px;
+      background: transparent;
+    }
+    h1 {
+      font-size: clamp(1.5em, 5vw, 2em);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .timer {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      font-size: clamp(1.2em, 4vw, 2em);
+      font-weight: bold;
+      flex-wrap: wrap;
+    }
+    .timer div {
+      background-color: #000;
+      padding: 8px 12px;
+      border: 1px solid #fff;
+      min-width: 50px;
+      text-align: center;
+    }
+    .timer span {
+      display: block;
+      font-size: 0.4em;
+      text-transform: uppercase;
+    }
+    .info {
+      margin-top: 15px;
+      font-size: clamp(0.8em, 3vw, 1em);
+      letter-spacing: 1px;
+    }
+    @media (max-width: 600px) {
+      .rectangle-frame {
+        width: 95vw;
+        min-height: 200px;
+        padding: 8px;
+      }
+      .container {
+        padding: 10px;
+      }
+      .timer {
+        gap: 6px;
+      }
+      .timer div {
+        padding: 6px 10px;
+        min-width: 40px;
+      }
+    }
+    @media (max-width: 400px) {
+      .timer {
+        font-size: clamp(1em, 3.5vw, 1.5em);
+      }
+      .timer div {
+        min-width: 35px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="rectangle-frame">
+    <div class="container">
+      <h1>GOGOGO高雄</h1>
+      <div class="timer">
+        <div><span>Days</span><span id="days">0</span></div>
+        <div><span>Hours</span><span id="hours">0</span></div>
+        <div><span>Minutes</span><span id="minutes">0</span></div>
+        <div><span>Seconds</span><span id="seconds">0</span></div>
+      </div>
+      <div class="info">Hong Kong to Kaohsiung - 19 Feb 2026, 10:30</div>
+    </div>
+  </div>
+  <script>
+    const tripDate = new Date('2026-02-19T10:30:00+08:00').getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const timeLeft = tripDate - now;
+
+      if (timeLeft <= 0) {
+        document.querySelector('.timer').innerHTML = '<div>Departed!</div>';
+        return;
+      }
+
+      const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+      document.getElementById('days').textContent = days.toString().padStart(2, '0');
+      document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+      document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+      document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>
